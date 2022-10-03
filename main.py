@@ -52,23 +52,35 @@ def propagate(pos, j0):
     _o = ord(c) - char_code_1
 
     for j in range(0, N):
-        if j != j0:
-            # Row
+        if j == j0:
+            continue
+
+        to_propagate = False
+
+        # Row
+        if c in pos[j]:
             pos[j] = pos[j].replace(c, '')
+            to_propagate = True
 
-            # South-east diagonal
-            o = _o - (j0 - j)
-            if o >= 0 and o < N:
-                pos[j] = pos[j].replace(chr(char_code_1 + o), '')
+        # South-east diagonal
+        o = _o - (j0 - j)
+        cd = chr(char_code_1 + o)
 
-            # North-east diagonal
-            o = _o + (j0 - j)
-            if o >= 0 and o < N:
-                pos[j] = pos[j].replace(chr(char_code_1 + o), '')
+        if o >= 0 and o < N and cd in pos[j]:
+            pos[j] = pos[j].replace(cd, '')
+            to_propagate = True
 
-            if len(pos[j]) == 1:
-                if propagate(pos, j) is None:
-                    return None
+        # North-east diagonal
+        o = _o + (j0 - j)
+        cd = chr(char_code_1 + o)
+
+        if o >= 0 and o < N and cd in pos[j]:
+            pos[j] = pos[j].replace(cd, '')
+            to_propagate = True
+
+        if len(pos[j]) == 1 and to_propagate:
+            if propagate(pos, j) is None:
+                return None
 
     return pos
 
@@ -79,6 +91,7 @@ pos = create_possibilities(N)
 print_potential_chess_board(pos)
 
 pos[2] = '5'
+pos[5] = '12'
 
 print_potential_chess_board(pos)
 print(pos)
