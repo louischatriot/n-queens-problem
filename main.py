@@ -2,11 +2,12 @@
 # In possibilities, pos = [N] where the list of possible rows is represented by a string
 
 import time
+from random import randrange
 
 char_code_1 = 49   # chr(49) is '1'
 
 
-N = 104
+N = 500
 
 alphabet = ''.join([chr(i) for i in range(char_code_1, char_code_1 + N)])
 
@@ -122,16 +123,28 @@ def search(pos):
 
 pos = create_possibilities(N)
 
-print_chess_board(pos)
+# print_chess_board(pos)
 
 # pos[5] = '5'
+
+p = 0
+
+step = N // 50
+
+
+for p in range(0, N, step):
+    pos[p] = pos[p][randrange(0, len(pos[p]))]
+    propagate(pos, p)
+
+
+
 
 start = time.time()
 
 res = search(pos)
 
-print(res)
-print_chess_board(res)
+# print(res)
+# print_chess_board(res)
 
 duration = time.time() - start
 print(f"======> Duration: {duration}")
