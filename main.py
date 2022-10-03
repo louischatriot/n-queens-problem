@@ -1,11 +1,12 @@
 # Data model = [N] where N is the number of queens. Each array value represents the row queen i is in for column i
 # In possibilities, pos = [N] where the list of possible rows is represented by a string
 
+import time
 
 char_code_1 = 49   # chr(49) is '1'
 
 
-N = 8
+N = 104
 
 alphabet = ''.join([chr(i) for i in range(char_code_1, char_code_1 + N)])
 
@@ -17,7 +18,7 @@ def create_possibilities(N):
     return pos
 
 
-def print_potential_chess_board(pos):
+def print_chess_board(pos):
     N = len(pos)
 
     print("==" * N)
@@ -36,6 +37,10 @@ def print_potential_chess_board(pos):
         print(l)
 
     print("==" * N)
+
+
+def clone_pos(pos):
+    return [c for c in pos]
 
 
 # c = column number
@@ -64,19 +69,19 @@ def propagate(pos, j0):
 
         # South-east diagonal
         o = _o - (j0 - j)
-        cd = chr(char_code_1 + o)
-
-        if o >= 0 and o < N and cd in pos[j]:
-            pos[j] = pos[j].replace(cd, '')
-            to_propagate = True
+        if o >= 0 and o < N:
+            cd = chr(char_code_1 + o)
+            if cd in pos[j]:
+                pos[j] = pos[j].replace(cd, '')
+                to_propagate = True
 
         # North-east diagonal
         o = _o + (j0 - j)
-        cd = chr(char_code_1 + o)
-
-        if o >= 0 and o < N and cd in pos[j]:
-            pos[j] = pos[j].replace(cd, '')
-            to_propagate = True
+        if o >= 0 and o < N:
+            cd = chr(char_code_1 + o)
+            if cd in pos[j]:
+                pos[j] = pos[j].replace(cd, '')
+                to_propagate = True
 
         if len(pos[j]) == 1 and to_propagate:
             if propagate(pos, j) is None:
@@ -86,18 +91,53 @@ def propagate(pos, j0):
 
 
 
+
+def search(pos):
+    N = len(pos)
+
+    sizes = list(map(len, pos))
+
+    if min(sizes) == 0:
+        return None
+
+    if max(sizes) == 1:
+        return pos
+
+    # Starting with column with the least number of possibilities but not 1
+    sizes = list(map(lambda l: N if l == 1 else l, sizes))
+    j0 = sizes.index(min(sizes))
+
+    for c in pos[j0]:
+        _pos = clone_pos(pos)
+        _pos[j0] = c
+
+        if propagate(_pos, j0):
+            res = search(_pos)
+            if res is not None:
+                return res
+
+    return None
+
+
+
 pos = create_possibilities(N)
 
-print_potential_chess_board(pos)
+print_chess_board(pos)
 
-pos[2] = '5'
-pos[5] = '12'
+# pos[5] = '5'
 
-print_potential_chess_board(pos)
-print(pos)
+start = time.time()
 
-pos = propagate(pos, 2)
+res = search(pos)
 
-print_potential_chess_board(pos)
-print(pos)
+print(res)
+print_chess_board(res)
+
+duration = time.time() - start
+print(f"======> Duration: {duration}")
+
+
+
+
+
 
