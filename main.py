@@ -143,44 +143,8 @@ def search(pos):
     return None
 
 
-def solve_n_queens(N, fixed_queen):
-    pos = create_possibilities(N)
-
-    # Declaring fixed queen
-    alphabet = create_alphabet(N)
-    i, j = fixed_queen
-    pos[j] = alphabet[i]
-
-    # Place random queens to speed algo up if board is large
-    # There are so many solutions it provides a very nice speed up at a low risk
-    # We should actually check execution time downstream and stop if it takes too long
-    # That, or find a better heuristic for placing our queens
-    if N > 500:
-        empty_slots = 80
-    elif N > 100:
-        empty_slots = 40
-    else:
-        empty_slots = N + 1
-
-    empty_step = N // empty_slots
-    if empty_step > 0:
-        for p in range(0, N):
-            if p % empty_step != 0 and p != j:
-                try:
-                    chosen = randrange(0, len(pos[p]))
-                except ValueError:
-                    # Could not place this random queen, dismiss and move on to the next
-                    continue
-
-                pos[p] = pos[p][chosen]
-                propagate(pos, p)
-
-    res = search(pos)
-
-    if res is None:
-        return None
-
-    # Transform into expected string format
+def string_rep(res):
+    N = len(res)
     s = ''
     for i in range(0, N):
         l = ''
@@ -198,6 +162,57 @@ def solve_n_queens(N, fixed_queen):
 
 
 
+def solve_n_queens(N, fixed_queen):
+    pos = create_possibilities(N)
+
+    # Declaring fixed queen
+    alphabet = create_alphabet(N)
+    i, j = fixed_queen
+    pos[j] = alphabet[i]
+
+    # Place random queens to speed algo up if board is large
+    # There are so many solutions it provides a very nice speed up at a low risk
+    # We should actually check execution time downstream and stop if it takes too long
+    # That, or find a better heuristic for placing our queens
+    if N > 500:
+        empty_slots = 80
+    elif N > 100:
+        empty_slots = 40
+    else:
+        empty_slots = 0
+
+    if empty_slots == 0:
+        # No random optimization
+        res = search(pos)
+
+        if res is None:
+            return None
+        else:
+            return string_rep(res)
+
+    # For N > 100 there are always solutions so if our initial random placement didn't work we try again
+    res = None
+    empty_step = N // empty_slots
+    while res is None:
+        _pos = clone_pos(pos)
+        if empty_step > 0:
+            for p in range(0, N):
+                if p % empty_step != 0 and p != j:
+                    try:
+                        chosen = randrange(0, len(_pos[p]))
+                    except ValueError:
+                        # Could not place this random queen, dismiss and move on to the next
+                        continue
+
+                    _pos[p] = _pos[p][chosen]
+                    propagate(_pos, p)
+
+        res = search(_pos)
+
+    return string_rep(res)
+
+
+
 
 
 
@@ -211,7 +226,7 @@ res = solve_n_queens(104, (86, 51))
 print(res)
 
 duration2 = time.time() - start
-print(f"======> Duration backtracking: {duration2}")
+print(f"======> Duration: {duration2}")
 
 
 
