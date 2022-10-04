@@ -4,14 +4,12 @@
 import time
 from random import randrange
 
-char_code_1 = 49   # chr(49) is '1'
+char_code_1 = 49   # chr(49) is '1' - arbitrary but easier for low N debugging
 
 
-N = 500
+N = 1000
 
 alphabet = ''.join([chr(i) for i in range(char_code_1, char_code_1 + N)])
-
-
 
 
 def create_possibilities(N):
@@ -44,6 +42,30 @@ def clone_pos(pos):
     return [c for c in pos]
 
 
+# Characters in s are ordered so we can use dichotomy
+# Actually slower than stro.replace
+# Using regex is faster than this but slower than replace even when searching the whole string
+# Using translate is much slower
+def remove_character(s, c):
+    N = len(s)
+    if N < 5:
+        return s.replace(c, '')
+
+    o = ord(c)
+    l = 0
+    u = N - 1
+    i = N // 2
+    while s[i] != c:
+        if ord(s[i]) < o:
+            l = i
+        else:
+            u = i
+
+        i = (l + u) // 2
+
+    return s[0:i] + s[(i+1):]
+
+
 # c = column number
 def propagate(pos, j0):
     N = len(pos)
@@ -65,15 +87,17 @@ def propagate(pos, j0):
 
         # Row
         if c in pos[j]:
-            pos[j] = pos[j].replace(c, '')
+            pos[j] = pos[j].replace(c, '', 1)
             to_propagate = True
+
+        continue
 
         # South-east diagonal
         o = _o - (j0 - j)
         if o >= 0 and o < N:
             cd = chr(char_code_1 + o)
             if cd in pos[j]:
-                pos[j] = pos[j].replace(cd, '')
+                pos[j] = pos[j].replace(cd, '', 1)
                 to_propagate = True
 
         # North-east diagonal
@@ -81,7 +105,7 @@ def propagate(pos, j0):
         if o >= 0 and o < N:
             cd = chr(char_code_1 + o)
             if cd in pos[j]:
-                pos[j] = pos[j].replace(cd, '')
+                pos[j] = pos[j].replace(cd, '', 1)
                 to_propagate = True
 
         if len(pos[j]) == 1 and to_propagate:
@@ -127,15 +151,23 @@ pos = create_possibilities(N)
 
 # pos[5] = '5'
 
-p = 0
+start = time.time()
 
-step = N // 50
+empty_slots = 120
+empty_step = N // empty_slots
 
+t = 0
 
-for p in range(0, N, step):
-    pos[p] = pos[p][randrange(0, len(pos[p]))]
-    propagate(pos, p)
+for p in range(0, N):
+    if p % empty_step != 0:
+        t += 1
+        pos[p] = pos[p][randrange(0, len(pos[p]))]
+        propagate(pos, p)
 
+print(t)
+
+duration1 = time.time() - start
+print(f"======> Duration set up: {duration1}")
 
 
 
@@ -146,9 +178,11 @@ res = search(pos)
 # print(res)
 # print_chess_board(res)
 
-duration = time.time() - start
-print(f"======> Duration: {duration}")
+duration2 = time.time() - start
+print(f"======> Duration backtracking: {duration2}")
 
+
+print(f"======> Total duration: {duration1 + duration2}")
 
 
 
