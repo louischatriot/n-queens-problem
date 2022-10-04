@@ -221,7 +221,7 @@ def solve_n_queens(N, fixed_queen):
 
 start = time.time()
 
-res = solve_n_queens(104, (86, 51))
+res = solve_n_queens(219, (24, 104))
 
 print(res)
 
