@@ -6,19 +6,20 @@ from random import randrange
 
 char_code_1 = 49   # chr(49) is '1' - arbitrary but easier for low N debugging
 
-
-N = 1000
-
-alphabet = ''.join([chr(i) for i in range(char_code_1, char_code_1 + N)])
+def create_alphabet(N):
+    alphabet = ''.join([chr(i) for i in range(char_code_1, char_code_1 + N)])
+    return alphabet
 
 
 def create_possibilities(N):
+    alphabet = create_alphabet(N)
     pos = [alphabet for i in range(0, N)]
     return pos
 
 
 def print_chess_board(pos):
     N = len(pos)
+    alphabet = create_alphabet(N)
 
     print("==" * N)
 
@@ -90,8 +91,6 @@ def propagate(pos, j0):
             pos[j] = pos[j].replace(c, '', 1)
             to_propagate = True
 
-        continue
-
         # South-east diagonal
         o = _o - (j0 - j)
         if o >= 0 and o < N:
@@ -144,45 +143,58 @@ def search(pos):
     return None
 
 
+def solve_n_queens(N, fixed_queen):
+    pos = create_possibilities(N)
 
-pos = create_possibilities(N)
+    # Declaring fixed queen
+    alphabet = create_alphabet(N)
+    i, j = fixed_queen
+    pos[j] = alphabet[i]
 
-# print_chess_board(pos)
+    # empty_slots = 120
+    # empty_step = N // empty_slots
 
-# pos[5] = '5'
+    # for p in range(0, N):
+        # if p % empty_step != 0:
+            # t += 1
+            # pos[p] = pos[p][randrange(0, len(pos[p]))]
+            # propagate(pos, p)
+
+    res = search(pos)
+
+    # Transform into expected string format
+    s = ''
+    for i in range(0, N):
+        l = ''
+
+        for j in range(0, N):
+            if i == ord(res[j]) - char_code_1:
+                l += 'Q'
+            else:
+                l += '.'
+
+        l += '\n'
+        s += l
+
+    return s
+
+
+
+
+
+
+
+
 
 start = time.time()
 
-empty_slots = 120
-empty_step = N // empty_slots
-
-t = 0
-
-for p in range(0, N):
-    if p % empty_step != 0:
-        t += 1
-        pos[p] = pos[p][randrange(0, len(pos[p]))]
-        propagate(pos, p)
-
-print(t)
-
-duration1 = time.time() - start
-print(f"======> Duration set up: {duration1}")
-
-
-
-start = time.time()
-
-res = search(pos)
-
-# print(res)
-# print_chess_board(res)
+res = solve_n_queens(6, (1, 2))
+print_chess_board(res)
 
 duration2 = time.time() - start
 print(f"======> Duration backtracking: {duration2}")
 
 
-print(f"======> Total duration: {duration1 + duration2}")
 
 
 
