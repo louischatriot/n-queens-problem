@@ -165,7 +165,7 @@ def solve_n_queens(N, fixed_queen):
     empty_step = N // empty_slots
     if empty_step > 0:
         for p in range(0, N):
-            if p % empty_step != 0:
+            if p % empty_step != 0 and p != j:
                 try:
                     chosen = randrange(0, len(pos[p]))
                 except ValueError:
@@ -206,7 +206,9 @@ def solve_n_queens(N, fixed_queen):
 
 start = time.time()
 
-res = solve_n_queens(116, (23, 55))
+res = solve_n_queens(104, (86, 51))
+
+print(res)
 
 duration2 = time.time() - start
 print(f"======> Duration backtracking: {duration2}")
