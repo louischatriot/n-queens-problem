@@ -151,16 +151,34 @@ def solve_n_queens(N, fixed_queen):
     i, j = fixed_queen
     pos[j] = alphabet[i]
 
-    # empty_slots = 120
-    # empty_step = N // empty_slots
+    # Place random queens to speed algo up if board is large
+    # There are so many solutions it provides a very nice speed up at a low risk
+    # We should actually check execution time downstream and stop if it takes too long
+    # That, or find a better heuristic for placing our queens
+    if N > 500:
+        empty_slots = 80
+    elif N > 100:
+        empty_slots = 40
+    else:
+        empty_slots = N + 1
 
-    # for p in range(0, N):
-        # if p % empty_step != 0:
-            # t += 1
-            # pos[p] = pos[p][randrange(0, len(pos[p]))]
-            # propagate(pos, p)
+    empty_step = N // empty_slots
+    if empty_step > 0:
+        for p in range(0, N):
+            if p % empty_step != 0:
+                try:
+                    chosen = randrange(0, len(pos[p]))
+                except ValueError:
+                    # Could not place this random queen, dismiss and move on to the next
+                    continue
+
+                pos[p] = pos[p][chosen]
+                propagate(pos, p)
 
     res = search(pos)
+
+    if res is None:
+        return None
 
     # Transform into expected string format
     s = ''
@@ -188,8 +206,7 @@ def solve_n_queens(N, fixed_queen):
 
 start = time.time()
 
-res = solve_n_queens(6, (1, 2))
-print_chess_board(res)
+res = solve_n_queens(116, (23, 55))
 
 duration2 = time.time() - start
 print(f"======> Duration backtracking: {duration2}")
