@@ -4,6 +4,7 @@
 import time
 from random import randrange
 
+TIMEOUT = 0.15
 char_code_1 = 49   # chr(49) is '1' - arbitrary but easier for low N debugging
 
 def create_alphabet(N):
@@ -116,7 +117,7 @@ def propagate(pos, j0):
 
 
 
-def search(pos):
+def search(pos, start = None):
     N = len(pos)
 
     sizes = list(map(len, pos))
@@ -127,6 +128,9 @@ def search(pos):
     if max(sizes) == 1:
         return pos
 
+    if start and time.time() - start > TIMEOUT:
+        return None
+
     # Starting with column with the least number of possibilities but not 1
     sizes = list(map(lambda l: N if l == 1 else l, sizes))
     j0 = sizes.index(min(sizes))
@@ -136,7 +140,7 @@ def search(pos):
         _pos[j0] = c
 
         if propagate(_pos, j0):
-            res = search(_pos)
+            res = search(_pos, start)
             if res is not None:
                 return res
 
@@ -207,7 +211,7 @@ def solve_n_queens(N, fixed_queen):
                     _pos[p] = _pos[p][chosen]
                     propagate(_pos, p)
 
-        res = search(_pos)
+        res = search(_pos, time.time())
 
     return string_rep(res)
 
@@ -215,15 +219,67 @@ def solve_n_queens(N, fixed_queen):
 
 
 
+# Permutation method where each array cell is the column corresponding to the array line
+def generate_permutation_with_fixed(N, fi, fj):
+    res = [i for i in range(0, N)]
+
+    for i in range(N - 1, 0, -1):
+        j = randrange(0, i + 1)
+        swp = res[i]
+        res[i] = res[j]
+        res[j] = swp
+
+    # Ensure fixed queen is in place ; for large N the array stays "random enough"
+    if res[fi] != fj:
+        i0 = res.index(fj)
+        swp = res[fi]
+        res[fi] = res[i0]
+        res[i0] = swp
+
+    return res
+
+
+# Format asked by kata is not very legible
+def string_rep_permutation(pos, legible = False):
+    N = len(pos)
+    s = ''
+    quanta = '.' + (' ' if legible else '')
+    for i in range(0, N):
+        l = [quanta] * N + ['\n']
+        l[pos[i]] = 'Q' + (' ' if legible else '')
+        s += ''.join(l)
+
+    return s
+
+
+def solve_n_queens_permutations(N, fi, fj):
+    pos = generate_permutation_with_fixed(N, fi, fj)
+
+    # Keep track of how many queens on all diagonals
+    se_diag = [0 for i in range(0, 2 * N - 1)]
+    ne_diag = [0 for i in range(0, 2 * N - 1)]
+
+    for i in range(0, N):
+        j = pos[i]
+        ne_diag[i + j] += 1
+        se_diag[N - 1 + j - i] += 1   # True domain is [-N+1, N-1] hence the offset
+
+    s = string_rep_permutation(pos, True)
+    print(s)
+
+    print(ne_diag)
+    print(se_diag)
 
 
 
 
 start = time.time()
 
-res = solve_n_queens(219, (24, 104))
+solve_n_queens_permutations(20, 4, 1)
 
-print(res)
+# res = solve_n_queens(219, (24, 104))
+
+# print(res)
 
 duration2 = time.time() - start
 print(f"======> Duration: {duration2}")
