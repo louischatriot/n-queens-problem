@@ -269,25 +269,59 @@ def reset_diags(pos):
 
 def solve_n_queens_permutations(N, fi, fj):
     pos = generate_permutation_with_fixed(N, fi, fj)
+    # Fixed case for N = 100
+    # pos = [3, 99, 65, 95, 1, 11, 10, 8, 56, 83, 21, 17, 43, 54, 90, 64, 6, 81, 92, 12, 98, 9, 68, 72, 30, 2, 0, 75, 69, 39, 48, 73, 51, 79, 25, 20, 62, 71, 94, 67, 89, 87, 35, 31, 28, 93, 37, 45, 82, 57, 80, 18, 46, 60, 63, 97, 52, 15, 66, 84, 59, 16, 58, 23, 24, 74, 13, 88, 26, 61, 5, 33, 4, 70, 96, 34, 36, 78, 91, 7, 38, 49, 40, 27, 22, 19, 29, 41, 86, 32, 85, 76, 55, 47, 14, 44, 50, 77, 53, 42]
+
     ne_diag, se_diag = reset_diags(pos)
 
     def get_attacks(i1, i2):
-        score = sum([0 if i == 0 else i - 1 for i in se_diag]) + sum([0 if i == 0 else i - 1 for i in ne_diag])
-        return score
+        j1 = pos[i1]
+        j2 = pos[i2]
+
+        # Sort to avoid double counting diagonals
+        nd = sorted([i1 + j1, i2 + j2, i1 + j2, i2 + j1])
+        sd = sorted([N - 1 + j1 - i1, N - 1 + j2 - i2, N - 1 + j2 - i1, N - 1 + j1 - i2])
+
+        res = 0
+
+        # for i in range(0, 4):
+            # if i == 3 or nd[i] != nd[i + 1]:
+                # res += ne_diag[nd[i]]
+
+            # if i == 3 or sd[i] != sd[i + 1]:
+                # res += se_diag[sd[i]]
+
+        # Actually this more naive version seems to work
+        for d in sorted(nd):
+            res += 0 if ne_diag[d] == 0 else ne_diag[d] - 1
+        for d in sd:
+            res += 0 if se_diag[d] == 0 else se_diag[d] - 1
+
+        return res
+
+        # score = sum([0 if i == 0 else i - 1 for i in se_diag]) + sum([0 if i == 0 else i - 1 for i in ne_diag])
+        # return score
 
     # Assumes i1 != i2 (and hence j1 != j2)
     # Can have two queens on the same diagonal, but not on the two diagonals at once
     def swap(i1, i2):
         attacks_before = get_attacks(i1, i2)
 
+        # Decrement queen number in former (i1, j1) and (i2, j2) queen diagonals
+        ne_diag[i1 + pos[i1]] -= 1
+        se_diag[N - 1 + pos[i1] - i1] -= 1
+        ne_diag[i2 + pos[i2]] -= 1
+        se_diag[N - 1 + pos[i2] - i2] -= 1
+
         swp = pos[i1]
         pos[i1] = pos[i2]
         pos[i2] = swp
 
-        n, s = reset_diags(pos)
-        for i in range(0, 2 * N - 1):
-            ne_diag[i] = n[i]
-            se_diag[i] = s[i]
+        # Increment queen number in new (i1, j1) and (i2, j2) queen diagonals
+        ne_diag[i1 + pos[i1]] += 1
+        se_diag[N - 1 + pos[i1] - i1] += 1
+        ne_diag[i2 + pos[i2]] += 1
+        se_diag[N - 1 + pos[i2] - i2] += 1
 
         attacks_after = get_attacks(i1, i2)
 
@@ -296,14 +330,19 @@ def solve_n_queens_permutations(N, fi, fj):
             return 1
         else:
             # Rollback
+            ne_diag[i1 + pos[i1]] -= 1
+            se_diag[N - 1 + pos[i1] - i1] -= 1
+            ne_diag[i2 + pos[i2]] -= 1
+            se_diag[N - 1 + pos[i2] - i2] -= 1
+
             swp = pos[i1]
             pos[i1] = pos[i2]
             pos[i2] = swp
 
-            n, s = reset_diags(pos)
-            for i in range(0, 2 * N - 1):
-                ne_diag[i] = n[i]
-                se_diag[i] = s[i]
+            ne_diag[i1 + pos[i1]] += 1
+            se_diag[N - 1 + pos[i1] - i1] += 1
+            ne_diag[i2 + pos[i2]] += 1
+            se_diag[N - 1 + pos[i2] - i2] += 1
 
             return 0
 
@@ -349,7 +388,7 @@ def solve_n_queens(N, fixed_queen):
 
 start = time.time()
 
-s = solve_n_queens(200, (4, 1))
+s = solve_n_queens(1000, (4, 1))
 
 # Nice print
 # for l in s.split():
