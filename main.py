@@ -253,146 +253,94 @@ def string_rep_permutation(pos, legible = False):
     return s
 
 
+def reset_diags(pos):
+    N = len(pos)
 
-
-def solve_n_queens_permutations(N, fi, fj):
-    pos = generate_permutation_with_fixed(N, fi, fj)
-
-    # Keep track of how many queens on all diagonals
     se_diag = [0 for i in range(0, 2 * N - 1)]
     ne_diag = [0 for i in range(0, 2 * N - 1)]
-
-    def get_attacks(i1, j1, i2, j2):
-        diags = []
-        if i1 + j1 == i2 + j2:
-            diags = [i1 + j1, -1, N - 1 + j1 - i1, N - 1 + j2 - i2]
-        elif j1 - i1 == j2 - i2:
-            diags = [i1 + j1, i2 + j2, N - 1 - j1 + i1, -1]
-        else:
-            diags = [i1 + j1, i2 + j2, N - 1 + j1 - i1, N - 1 + j2 - i2]
-
-        res = 0
-        for d in diags[0:2]:
-            if d != -1:
-                res += 0 if ne_diag[d] == 0 else ne_diag[d] - 1
-                # res += 0 if ne_diag[d] == 0 else ne_diag[d] * (ne_diag[d] + 1) // 2
-
-        for d in diags[2:]:
-            if d != -1:
-                res += 0 if se_diag[d] == 0 else se_diag[d] - 1
-                # res += 0 if se_diag[d] == 0 else se_diag[d] * (se_diag[d] + 1) // 2
-
-        return res
-
-    # Assumes i1 != i2 (and hence j1 != j2)
-    # Can have two queens on the same diagonal, but not on the two diagonals at once
-    def swap(i1, i2):
-        attacks_before = get_attacks(i1, pos[i1], i2, pos[i2])
-
-        swp = pos[i1]
-        pos[i1] = pos[i2]
-        pos[i2] = swp
-
-        attacks_after = get_attacks(i1, pos[i1], i2, pos[i2])
-
-        if attacks_after < attacks_before:
-            ne_diag[i1 + pos[i2]] -= 1
-            se_diag[N - 1 + pos[i2] - i1] -= 1
-
-            ne_diag[i1 + pos[i1]] += 1
-            se_diag[N - 1 + pos[i1] - i1] += 1
-
-            ne_diag[i2 + pos[i1]] -= 1
-            se_diag[N - 1 + pos[i1] - i2] -= 1
-
-            ne_diag[i2 + pos[i2]] += 1
-            se_diag[N - 1 + pos[i2] - i2] += 1
-
-            return 1   # Keep the swap, it reduced the number of attacks
-        else:
-            # Rollback
-            swp = pos[i1]
-            pos[i1] = pos[i2]
-            pos[i2] = swp
-            return 0
 
     for i in range(0, N):
         j = pos[i]
         ne_diag[i + j] += 1
         se_diag[N - 1 + j - i] += 1   # True domain is [-N+1, N-1] hence the offset
 
+    return (ne_diag, se_diag)
+
+
+def solve_n_queens_permutations(N, fi, fj):
+    pos = generate_permutation_with_fixed(N, fi, fj)
+    ne_diag, se_diag = reset_diags(pos)
+
+    def get_attacks(i1, i2):
+        score = sum([0 if i == 0 else i - 1 for i in se_diag]) + sum([0 if i == 0 else i - 1 for i in ne_diag])
+        return score
+
+    # Assumes i1 != i2 (and hence j1 != j2)
+    # Can have two queens on the same diagonal, but not on the two diagonals at once
+    def swap(i1, i2):
+        attacks_before = get_attacks(i1, i2)
+
+        swp = pos[i1]
+        pos[i1] = pos[i2]
+        pos[i2] = swp
+
+        n, s = reset_diags(pos)
+        for i in range(0, 2 * N - 1):
+            ne_diag[i] = n[i]
+            se_diag[i] = s[i]
+
+        attacks_after = get_attacks(i1, i2)
+
+        if attacks_after < attacks_before:
+            # Better after swap, keep it
+            return 1
+        else:
+            # Rollback
+            swp = pos[i1]
+            pos[i1] = pos[i2]
+            pos[i2] = swp
+
+            n, s = reset_diags(pos)
+            for i in range(0, 2 * N - 1):
+                ne_diag[i] = n[i]
+                se_diag[i] = s[i]
+
+            return 0
+
     swaps = 1
     t = 0
     while swaps != 0:
         t += 1
-        # print("%%%%%%%%%%%%% GO %%%%%%%%%%%%%")
-        # print(string_rep_permutation(pos, True))
-        # print(se_diag)
-        # print(ne_diag)
-
         swaps = 0
+
         for i1 in range(0, N):
             for i2 in range(i1 + 1, N):
                 j1 = pos[i1]
                 j2 = pos[i2]
 
-                print("==========================================")
-                print(f"POS: {pos}")
-                print(string_rep_permutation(pos, True))
-                print(f"SE: {se_diag}")
-                print(f"NE: {ne_diag}")
-                score = sum([0 if i == 0 else i - 1 for i in se_diag]) + sum([0 if i == 0 else i - 1 for i in ne_diag])
-                print(score)
-                print(f"{i1} x {j1} --- {i2} x {j2}")
-
-
-
                 # One of the queens, at least, is attacked
                 if max(ne_diag[i1 + j1], se_diag[N - 1 + j1 - i1], ne_diag[i2 + j2], se_diag[N - 1 + j2 - i2]) >= 2:
-                    print("BING")
-                    # print(f"SE {i1 + j1} {i2 + j2} --- NE {N - 1 + j1 - i1} {N - 1 + j2 - i2}")
                     swaps += swap(i1, i2)
 
-                    # se_diag = [0 for i in range(0, 2 * N - 1)]
-                    # ne_diag = [0 for i in range(0, 2 * N - 1)]
-                    # for i in range(0, N):
-                        # j = pos[i]
-                        # ne_diag[i + j] += 1
-                        # se_diag[N - 1 + j - i] += 1   # True domain is [-N+1, N-1] hence the offset
+    print("DONE")
+    print(max(se_diag))
+    print(max(ne_diag))
 
-                score = sum([0 if i == 0 else i - 1 for i in se_diag]) + sum([0 if i == 0 else i - 1 for i in ne_diag])
-                print(score)
+    return pos
 
-        print("SWAPS")
-        print(swaps)
-        1/0
-
-    print(t)
-    # print("===== RESULTS =====")
-    # print(se_diag)
-    # print(ne_diag)
-
-
-    # se_diag = [0 for i in range(0, 2 * N - 1)]
-    # ne_diag = [0 for i in range(0, 2 * N - 1)]
-    # for i in range(0, N):
-        # j = pos[i]
-        # ne_diag[i + j] += 1
-        # se_diag[N - 1 + j - i] += 1   # True domain is [-N+1, N-1] hence the offset
-
-    # print("===== CHECKING CORRECTEDNESS =====")
-    # print(se_diag)
-    # print(ne_diag)
-    # print(max(se_diag))
-    # print(max(ne_diag))
-
-    s = string_rep_permutation(pos)
-    return s
 
 
 def solve_n_queens(N, fixed_queen):
     fi, fj = fixed_queen
-    return solve_n_queens_permutations(N, fi, fj)
+
+    while True:
+        pos = solve_n_queens_permutations(N, fi, fj)
+        ne_diag, se_diag = reset_diags(pos)
+        if max(ne_diag) == 1 and max(se_diag) == 1:
+            break
+
+    s = string_rep_permutation(pos)
+    return s
 
 
 
@@ -401,11 +349,11 @@ def solve_n_queens(N, fixed_queen):
 
 start = time.time()
 
-s = solve_n_queens_permutations(5, 4, 1)
+s = solve_n_queens(200, (4, 1))
 
 # Nice print
-for l in s.split():
-    print(' '.join([c for c in l]))
+# for l in s.split():
+    # print(' '.join([c for c in l]))
 
 
 # res = solve_n_queens(219, (24, 104))
