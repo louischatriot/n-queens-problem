@@ -173,7 +173,7 @@ def solve_n_queens_backtrack(N, fixed_queen):
     # Declaring fixed queen
     alphabet = create_alphabet(N)
     i, j = fixed_queen
-    pos[j] = alphabet[i]
+    pos[j - 1] = alphabet[i]   # TODO: not sure
 
     # Place random queens to speed algo up if board is large
     # There are so many solutions it provides a very nice speed up at a low risk
@@ -188,12 +188,7 @@ def solve_n_queens_backtrack(N, fixed_queen):
 
     if empty_slots == 0:
         # No random optimization
-        res = search(pos)
-
-        if res is None:
-            return None
-        else:
-            return string_rep(res)
+        return search(pos)
 
     # For N > 100 there are always solutions so if our initial random placement didn't work we try again
     res = None
@@ -214,7 +209,7 @@ def solve_n_queens_backtrack(N, fixed_queen):
 
         res = search(_pos, time.time())
 
-    return string_rep(res)
+    return res
 
 
 
@@ -353,17 +348,19 @@ def solve_n_queens_permutations(N, fi, fj):
         swaps = 0
 
         for i1 in range(0, N):
+            if i1 == fi:
+                continue
+
             for i2 in range(i1 + 1, N):
+                if i2 == fi:
+                    continue
+
                 j1 = pos[i1]
                 j2 = pos[i2]
 
                 # One of the queens, at least, is attacked
                 if max(ne_diag[i1 + j1], se_diag[N - 1 + j1 - i1], ne_diag[i2 + j2], se_diag[N - 1 + j2 - i2]) >= 2:
                     swaps += swap(i1, i2)
-
-    print("DONE")
-    print(max(se_diag))
-    print(max(ne_diag))
 
     return pos
 
@@ -372,14 +369,23 @@ def solve_n_queens_permutations(N, fi, fj):
 def solve_n_queens(N, fixed_queen):
     fi, fj = fixed_queen
 
-    while True:
-        pos = solve_n_queens_permutations(N, fi, fj)
-        ne_diag, se_diag = reset_diags(pos)
-        if max(ne_diag) == 1 and max(se_diag) == 1:
-            break
+    # Backtracking fast enough for low N
+    if N < 20:
+        pos = solve_n_queens_backtrack(N, fixed_queen)
+        if pos is not None:
+            pos = [int(i) - 1 for i in pos]
+    else:
+        while True:
+            pos = solve_n_queens_permutations(N, fi, fj)
+            ne_diag, se_diag = reset_diags(pos)
+            if max(ne_diag) == 1 and max(se_diag) == 1:
+                break
 
-    s = string_rep_permutation(pos)
-    return s
+    if pos is None:
+        return None
+    else:
+        s = string_rep_permutation(pos)
+        return s
 
 
 
@@ -388,11 +394,11 @@ def solve_n_queens(N, fixed_queen):
 
 start = time.time()
 
-s = solve_n_queens(1000, (4, 1))
+s = solve_n_queens(4, (0, 2))
 
 # Nice print
-# for l in s.split():
-    # print(' '.join([c for c in l]))
+for l in s.split():
+    print(' '.join([c for c in l]))
 
 
 # res = solve_n_queens(219, (24, 104))
