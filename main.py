@@ -6,10 +6,10 @@ from random import randrange
 # from math import factorial
 
 TIMEOUT = 0.15
-char_code_1 = 49   # chr(49) is '1' - arbitrary but easier for low N debugging
+char_code_0 = 48
 
 def create_alphabet(N):
-    alphabet = ''.join([chr(i) for i in range(char_code_1, char_code_1 + N)])
+    alphabet = ''.join([chr(i) for i in range(char_code_0, char_code_0 + N)])
     return alphabet
 
 
@@ -80,7 +80,7 @@ def propagate(pos, j0):
         return pos
 
     c = pos[j0]
-    _o = ord(c) - char_code_1
+    _o = ord(c) - char_code_0
 
     for j in range(0, N):
         if j == j0:
@@ -96,7 +96,7 @@ def propagate(pos, j0):
         # South-east diagonal
         o = _o - (j0 - j)
         if o >= 0 and o < N:
-            cd = chr(char_code_1 + o)
+            cd = chr(char_code_0 + o)
             if cd in pos[j]:
                 pos[j] = pos[j].replace(cd, '', 1)
                 to_propagate = True
@@ -104,7 +104,7 @@ def propagate(pos, j0):
         # North-east diagonal
         o = _o + (j0 - j)
         if o >= 0 and o < N:
-            cd = chr(char_code_1 + o)
+            cd = chr(char_code_0 + o)
             if cd in pos[j]:
                 pos[j] = pos[j].replace(cd, '', 1)
                 to_propagate = True
@@ -155,7 +155,7 @@ def string_rep(res):
         l = ''
 
         for j in range(0, N):
-            if i == ord(res[j]) - char_code_1:
+            if i == ord(res[j]) - char_code_0:
                 l += 'Q'
             else:
                 l += '.'
@@ -173,7 +173,7 @@ def solve_n_queens_backtrack(N, fixed_queen):
     # Declaring fixed queen
     alphabet = create_alphabet(N)
     i, j = fixed_queen
-    pos[j - 1] = alphabet[i]   # TODO: not sure
+    pos[j] = alphabet[i]   # TODO: not sure
 
     # Place random queens to speed algo up if board is large
     # There are so many solutions it provides a very nice speed up at a low risk
@@ -370,16 +370,20 @@ def solve_n_queens(N, fixed_queen):
     fi, fj = fixed_queen
 
     # Backtracking fast enough for low N
-    if N < 20:
+    if N < 10:
         pos = solve_n_queens_backtrack(N, fixed_queen)
-        if pos is not None:
-            pos = [int(i) - 1 for i in pos]
-    else:
-        while True:
-            pos = solve_n_queens_permutations(N, fi, fj)
-            ne_diag, se_diag = reset_diags(pos)
-            if max(ne_diag) == 1 and max(se_diag) == 1:
-                break
+
+        if pos is None:
+            return None
+        else:
+            # pos = [int(i) - 1 for i in pos]
+            return string_rep(pos)
+
+    while True:
+        pos = solve_n_queens_permutations(N, fi, fj)
+        ne_diag, se_diag = reset_diags(pos)
+        if max(ne_diag) == 1 and max(se_diag) == 1:
+            break
 
     if pos is None:
         return None
